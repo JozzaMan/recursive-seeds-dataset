@@ -1,0 +1,32 @@
+name: Sync SpiralSeeder from Hugging Face
+
+on:
+  schedule:
+    - cron: '0 12 * * 1,4'  # Every Monday and Thursday at noon UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v3
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install git-lfs
+          git lfs install
+
+      - name: Pull latest from Hugging Face
+        run: |
+          git clone https://huggingface.co/datasets/AletheiaP/recursive-seeds-dataset hf-source
+          cp -r hf-source/* .
+
+      - name: Push updates to GitHub
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add .
+          git commit -m "Auto-sync from Hugging Face [$(date)]" || echo "No changes to commit"
+          git push origin main
